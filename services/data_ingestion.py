@@ -67,7 +67,7 @@ class DataIngestionService:
 # --- Quick test ---
 if __name__ == "__main__":
     service = DataIngestionService()
-    result = service.get_latest_summary("AAPL")
+    result = service.get_latest_summary("MSFT")
     print("\n--- Latest Summary ---")
     for key, value in result.items():
         print(f"{key}: {value}")

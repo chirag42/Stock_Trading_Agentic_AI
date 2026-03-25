@@ -98,7 +98,7 @@ class SentimentAnalysisService:
 # --- Quick test ---
 if __name__ == "__main__":
     service = SentimentAnalysisService()
-    result = service.get_aggregated_sentiment("AAPL")
+    result = service.get_aggregated_sentiment("MSFT")
 
     print("\n--- Sentiment Summary ---")
     print(f"Ticker: {result['ticker']}")
