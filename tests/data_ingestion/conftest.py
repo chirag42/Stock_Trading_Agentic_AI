@@ -11,7 +11,7 @@ from services.data_ingestion.validator import TickerValidator
 
 def make_mock_df(rows: int = 60, stale_days: int = 0) -> pd.DataFrame:
     end   = datetime.now() - timedelta(days=stale_days)
-    dates = pd.date_range(end=end, periods=rows, freq="B")
+    dates = pd.date_range(end=end, periods=rows, freq="D")
     close = 150.0 + np.cumsum(np.random.randn(rows))
     return pd.DataFrame({
         "Open":   close * 0.99,

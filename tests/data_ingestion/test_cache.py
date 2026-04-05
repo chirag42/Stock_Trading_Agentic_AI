@@ -43,13 +43,13 @@ class TestDataCache:
         df2 = make_mock_df(rows=50)
         cache.set("AAPL", "3mo", df1)
         cache.set("MSFT", "3mo", df2)
-        assert len(cache.get("AAPL", "3mo")) == 40
-        assert len(cache.get("MSFT", "3mo")) == 50
+        assert len(cache.get("AAPL", "3mo")) == len(df1)
+        assert len(cache.get("MSFT", "3mo")) == len(df2)
 
     def test_different_periods_dont_collide(self, cache):
         df1 = make_mock_df(rows=40)
         df2 = make_mock_df(rows=50)
         cache.set("AAPL", "1mo", df1)
         cache.set("AAPL", "3mo", df2)
-        assert len(cache.get("AAPL", "1mo")) == 40
-        assert len(cache.get("AAPL", "3mo")) == 50
+        assert len(cache.get("AAPL", "1mo")) == len(df1)
+        assert len(cache.get("AAPL", "3mo")) == len(df2)

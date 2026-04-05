@@ -23,9 +23,14 @@ class IndicatorCalculator:
         delta = df["Close"].diff()
         gain  = delta.where(delta > 0, 0.0).rolling(14).mean()
         loss  = (-delta.where(delta < 0, 0.0)).rolling(14).mean()
-        rs    = gain / loss.replace(0, float("inf"))
-        df["RSI"] = 100 - (100 / (1 + rs))
+        rs    = gain / loss.replace(0, float("nan"))
+        rsi   = 100 - (100 / (1 + rs))
+        # Handle edge cases: all gains → RSI=100, all losses → RSI=0
+        rsi[(loss == 0) & (gain > 0)] = 100.0
+        rsi[(gain == 0) & (loss > 0)] = 0.0
+        df["RSI"] = rsi
         return df
+    
 
     def _add_macd(self, df: pd.DataFrame) -> pd.DataFrame:
         ema12        = df["Close"].ewm(span=12, adjust=False).mean()

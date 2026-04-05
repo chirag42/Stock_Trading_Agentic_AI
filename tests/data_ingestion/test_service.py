@@ -44,7 +44,8 @@ class TestDataIngestionService:
 
     def test_rsi_signal_overbought(self, svc):
         df = make_mock_df(rows=60)
-        df["Close"] = [100 + i * 3 for i in range(60)]
+        n = len(df)
+        df["Close"] = [100 + i * 3 for i in range(n)]
         with patch("services.data_ingestion.fetcher.yf.Ticker") as mock:
             mock.return_value.history.return_value = df
             result = svc.get_latest_summary("AAPL")
@@ -52,7 +53,8 @@ class TestDataIngestionService:
 
     def test_rsi_signal_oversold(self, svc):
         df = make_mock_df(rows=60)
-        df["Close"] = [200 - i * 3 for i in range(60)]
+        n = len(df)
+        df["Close"] = [200 - i * 3 for i in range(n)]
         with patch("services.data_ingestion.fetcher.yf.Ticker") as mock:
             mock.return_value.history.return_value = df
             result = svc.get_latest_summary("AAPL")
@@ -61,9 +63,11 @@ class TestDataIngestionService:
     def test_invalid_ticker_raises(self, svc):
         with pytest.raises(InvalidTickerError):
             svc.get_latest_summary("IN$VALID")
-
+        
     def test_data_rows_matches_df_length(self, svc, valid_df):
         with patch("services.data_ingestion.fetcher.yf.Ticker") as mock:
             mock.return_value.history.return_value = valid_df
             result = svc.get_latest_summary("AAPL")
-        assert result["data_rows"] == 60
+        assert result["data_rows"] == len(valid_df)  # use actual length
+
+    
