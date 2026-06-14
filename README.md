@@ -1,148 +1,194 @@
 # Agentic AI Stock Trading System
 
-A research-based multi-agent AI system that simulates autonomous stock trading. 
-Specialized AI agents collaborate to analyze market data, process financial news, 
-generate trading strategies, and validate risk — entirely in simulation with no real money involved.
+A research-based multi-agent AI system that simulates autonomous stock trading.
+Specialized agents collaborate to analyze market data, process financial news,
+generate trading strategies, and validate risk — entirely in simulation, with
+**no real money and no real brokerage integration**.
 
-## Overview
+Instead of one model making every decision, the system distributes responsibility
+across specialized components, mirroring a real trading desk: a data analyst, a news
+analyst, a strategist, and a risk manager working together.
 
-Instead of a single model making all decisions, this system uses a **team of specialized agents**, 
-each responsible for one part of the trading pipeline. This mirrors how a real trading desk works — 
-a data analyst, a news analyst, a strategist, and a risk manager all working together.
+> **Status:** CISC 699 Implementation Sprint I — engineering baseline tagged `release-2026-sprint1-v0.1.0`.
+> The core pipeline (GRAD 695) is complete and tested (221 unit tests). This phase
+> migrates the Strategy Agent's LLM from local Ollama to the Claude API and adds the
+> Execution Simulator and Portfolio Agent.
+
+---
 
 ## System Architecture
+
 ```
 User Input (Stock Ticker)
-        ↓
-Data Ingestion Agent      → Fetches real-time OHLCV prices + calculates RSI/MACD
-        ↓
-Sentiment Analysis Agent  → Fetches news via Brave Search API + classifies with FinBERT
-        ↓
-Strategy Agent (LLM)      → Combines signals → generates Buy / Sell / Hold decision
-        ↓
-Risk Validator            → Checks decision against portfolio risk limits
-        ↓
-Execution Simulator       → Records simulated trade + calculates P&L
+        │
+        ▼
+Data Ingestion Service   → yfinance OHLCV + RSI / MACD (+ historical analyzer)
+        │
+        ▼
+Signal Filter            → escalates to the LLM only on strong, dynamic-threshold signals
+        │
+        ▼
+Sentiment Analysis       → Brave Search news → FinBERT classification → aggregated score
+        │
+        ▼
+Strategy Agent (LLM)     → fuses signals → BUY / SELL / HOLD + reasoning
+        │                   [CISC 699: Ollama/llama3.2 → Claude API]
+        ▼
+Risk Validator           → gates the decision (RSI extremes, position size, stop loss)
+        │
+        ▼
+Execution Simulator      → records simulated trade + P&L   [planned, CISC 699]
 ```
 
-## Services
+The `core/scheduler.py` drives the loop across a watchlist; `pipeline.py` wires a single
+ticker through the stages end-to-end.
 
-### Data Ingestion Service (`services/data_ingestion.py`)
-- Connects to **yfinance** to fetch real-time and historical OHLCV data
-- Calculates **RSI** (Relative Strength Index) to detect overbought/oversold conditions
-- Calculates **MACD** (Moving Average Convergence Divergence) to detect trend momentum
-- Implements exponential backoff for API rate limit handling
+---
 
-### Sentiment Analysis Service (`services/sentiment_analysis.py`)
-- Calls **Brave Search API** to fetch recent financial news for a given ticker
-- Runs each headline through **FinBERT** (a finance-specific NLP model) 
-- Classifies news as `positive`, `negative`, or `neutral`
-- Returns an aggregated sentiment score via majority vote
+## Repository Structure
 
-### Strategy Agent (`agents/strategy_agent.py`) — In Progress
-- Combines technical indicators from Data Ingestion with sentiment scores
-- Uses a **locally running LLM via Ollama** (llama3.2) for reasoning
-- Outputs a trading decision: `BUY`, `SELL`, or `HOLD` with justification
-
-### Risk Validator (`agents/risk_validator.py`) — Planned
-- Validates every proposed trade against predefined risk policies
-- Applies maximum loss thresholds to prevent excessive drawdown
-- Can trigger an emergency halt during critical failures
-
-### Execution Simulator (`services/execution_simulator.py`) — Planned
-- Records simulated trade entry and exit prices
-- Calculates profit/loss (P&L) for each session
-- Feeds results back to Strategy Agent for self-correction
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Language | Python 3.11+ |
-| Market Data | yfinance |
-| News API | Brave Search API |
-| Sentiment NLP | FinBERT (ProsusAI/finbert) |
-| Local LLM | Ollama + llama3.2 |
-| Agent Orchestration | LangChain / CrewAI |
-| Vector Memory | ChromaDB |
-| Structured Storage | PostgreSQL |
-| API Layer | FastAPI |
-
-## Project Structure
 ```
-stock-trading-ai/
+Stock_Trading_Agentic_AI/
 ├── agents/
-│   ├── __init__.py
-│   ├── strategy_agent.py      # LLM-powered decision making
-│   └── risk_validator.py      # Trade validation
+│   ├── risk_validator.py             # RSI / position-size / stop-loss gating
+│   ├── signal_filter.py              # dynamic-threshold signal escalation
+│   └── strategy_agent/               # LLM decision subpackage
+│       ├── agent.py                  # decide(market, sentiment) -> decision
+│       ├── llm_client.py             # Ollama client (← Claude migration target)
+│       ├── prompt_builder.py
+│       └── exceptions.py
 ├── services/
-│   ├── __init__.py
-│   ├── data_ingestion.py      # Market data + indicators
-│   ├── sentiment_analysis.py  # News + FinBERT
-│   └── execution_simulator.py # Simulated trade execution
+│   ├── data_ingestion/               # yfinance + indicators subpackage
+│   │   ├── service.py · fetcher.py · indicators.py · cache.py
+│   │   ├── validator.py · historical_analyzer.py · exceptions.py
+│   └── sentiment_analysis/           # news + FinBERT subpackage
+│       ├── service.py · fetcher.py · classifier.py
+│       ├── aggregator.py · exceptions.py
+├── core/
+│   └── scheduler.py                  # watchlist polling loop
+├── scripts/                          # standalone service runners
+│   ├── run_data_ingestion.py · run_sentiment_analysis.py · run_strategy_agent.py
+├── tests/                            # pytest suites, mirrored per component (221 tests)
+│   ├── data_ingestion/ · sentiment_analysis/ · strategy_agent/
+│   ├── signal_filter/ · scheduler/ · scripts/ · historical_analyzer/
+│   └── smoke_test.py                 # minimal offline baseline check
+├── docs/                             # engineering documentation
+│   ├── ARCHITECTURE.md · CHANGELOG note · KNOWN_ISSUES.md
+│   ├── RISK_LOG.md · SPRINT_REFLECTION.md · AI_USAGE_LOG.md
 ├── utils/
-│   └── __init__.py
-├── data/
-├── .env                       # API keys (never committed)
+├── main.py                           # entry point — runs the Scheduler over a watchlist
+├── pipeline.py                       # single-ticker end-to-end orchestrator
+├── requirements.txt
+├── .env.example
 ├── .gitignore
+├── CHANGELOG.md
 └── README.md
 ```
+
+### Conventions
+- **Modules/files:** `snake_case`; **classes:** `PascalCase`; **constants:** `UPPER_SNAKE`.
+- **Agents reason; services compute.** Subpackages expose their public class via `__init__.py`
+  (e.g. `from services.data_ingestion import DataIngestionService`).
+- **Tests mirror source layout** under `tests/<component>/`.
+- **Secrets** live in `.env` (gitignored); only `.env.example` is tracked. Runtime/cache
+  artifacts are never committed.
+
+---
+
+## Branch Strategy
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Always releasable; tagged baselines (`release-2026-sprint1-v0.1.0`, …) live here. |
+| `feature/<name>` | One branch per unit of work (e.g. `feature/execution-simulator`, `feature/claude-llm-client`). |
+| `fix/<name>` | Targeted bug fixes. |
+
+Commit messages: imperative and scoped — `feat(exec): add P&L tracking`,
+`docs(readme): refresh structure`, `test(signal): cover transition crossovers`.
+
+---
 
 ## Setup
 
 ### Prerequisites
-- Python 3.11+
-- Ollama (for local LLM)
+- Python **3.11+**, `git`
+- **Ollama** with `llama3.2` pulled (current Strategy Agent backend)
+- A **Brave Search API** key (financial news)
 
-### Installation
+### Install
 ```bash
-# Clone the repo
 git clone https://github.com/chirag42/Stock_Trading_Agentic_AI.git
 cd Stock_Trading_Agentic_AI
 
-# Create and activate virtual environment
 python3 -m venv venv
-source venv/bin/activate
+source venv/bin/activate            # Windows: venv\Scripts\activate
 
-# Install dependencies
-pip install yfinance pandas numpy requests transformers torch
-pip install langchain langgraph chromadb psycopg2-binary python-dotenv fastapi uvicorn
+pip install -r requirements.txt
 
-# Install Ollama and pull the model
-# Download Ollama from ollama.com, then:
+cp .env.example .env                # then fill in BRAVE_API_KEY
+
+# Strategy Agent LLM (local):
+# install Ollama from ollama.com, then:
 ollama pull llama3.2
 ```
 
-### Environment Variables
+### Required environment variables
+| Variable | Purpose |
+|----------|---------|
+| `BRAVE_API_KEY` | Financial news retrieval for sentiment |
+| `ANTHROPIC_API_KEY` | Claude API (CISC 699 migration — not yet required) |
 
-Create a `.env` file in the project root:
-```
-BRAVE_API_KEY=your_brave_api_key_here
-```
+---
 
-### Running Individual Services
+## Running
+
 ```bash
-# Test Data Ingestion
-python services/data_ingestion.py
+# Run the full scheduler over a watchlist
+python main.py
 
-# Test Sentiment Analysis
-python services/sentiment_analysis.py
+# Run a single ticker end-to-end
+python -c "from pipeline import TradingPipeline; TradingPipeline().run('MSFT')"
+
+# Run individual service runners
+python scripts/run_data_ingestion.py
+python scripts/run_sentiment_analysis.py
+python scripts/run_strategy_agent.py
+
+# Full test suite (221 tests)
+pytest
+
+# Minimal offline smoke test (no keys / Ollama / model load)
+python tests/smoke_test.py
 ```
+
+The smoke test imports every core module and exercises the real `SignalFilter` and
+`RiskValidator` against synthetic inputs. A passing run ends with `BASELINE OK`.
+
+---
 
 ## Current Status
 
-| Component | Status |
-|-----------|--------|
-| Software Requirements Specification (SRS) | ✅ Complete |
-| High-Level Design (HLD) | ✅ Complete |
-| Low-Level Design (LLD) | ✅ Complete |
-| Data Ingestion Service | ✅ Complete |
-| Sentiment Analysis Service | ✅ Complete |
-| Strategy Agent (Local LLM) | 🔄 In Progress |
-| Risk Validator | 📋 Planned |
-| Execution Simulator | 📋 Planned |
-| Dashboard UI | 📋 Planned |
+| Component | State |
+|-----------|-------|
+| Data Ingestion (modular) | ✅ Complete + tested |
+| Sentiment Analysis (modular, FinBERT) | ✅ Complete + tested |
+| Signal Filter (dynamic thresholds) | ✅ Complete + tested |
+| Strategy Agent (Ollama/llama3.2) | ✅ Complete + tested |
+| Risk Validator | ✅ Complete + tested |
+| Scheduler + Pipeline | ✅ Complete |
+| **Unit tests** | ✅ **221 passing** |
+| Claude API migration (`llm_client.py`) | 🔄 CISC 699 — planned |
+| Execution Simulator | 📋 CISC 699 — planned |
+| Portfolio Agent | 📋 CISC 699 — planned |
 
+---
 
-**Disclaimer:** This system is a research simulation only. It does not provide 
-financial advice and does not involve real money or real brokerage integration.
+## Documentation
+See [`docs/`](docs/): architecture notes, known-issues log, risk register, sprint
+reflection, and AI usage log. Version history is in [`CHANGELOG.md`](CHANGELOG.md).
+
+---
+
+## Disclaimer
+This system is a **research simulation only**. It does not connect to any brokerage,
+executes no real trades, involves no real money, and is not financial advice.
