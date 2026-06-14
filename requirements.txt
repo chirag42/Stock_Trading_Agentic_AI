@@ -1,0 +1,22 @@
+# ── Agentic AI Stock Trading System — pinned dependencies ──
+# Core pipeline (GRAD 695)
+yfinance==0.2.40
+pandas==2.2.2
+numpy==1.26.4
+pytz==2024.1
+requests==2.32.3
+
+# Sentiment classification (FinBERT)
+transformers==4.41.2
+torch==2.3.1
+
+# Strategy Agent LLM (local)
+ollama==0.3.1
+
+# Testing
+pytest==8.2.2
+
+# ── CISC 699 (add when the Claude migration lands in
+#    agents/strategy_agent/llm_client.py) ──
+# anthropic==0.34.0
+# python-dotenv==1.0.1
