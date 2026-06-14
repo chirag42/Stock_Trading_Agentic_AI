@@ -8,6 +8,7 @@ from services.sentiment_analysis.exceptions import (
     InvalidTickerError,
 )
 from tests.sentiment_analysis.conftest import make_mock_articles
+import yfinance as yf
 
 
 class TestNewsFetcher:
@@ -15,7 +16,11 @@ class TestNewsFetcher:
     @pytest.fixture
     def fetcher(self):
         with patch.dict("os.environ", {"BRAVE_API_KEY": "test-key"}):
-            return NewsFetcher(max_retries=2, backoff_base=0.01)
+            with patch("services.sentiment_analysis.fetcher.yf.Ticker") as mock_yf:
+                mock_instance = MagicMock()
+                mock_instance.history.return_value = MagicMock(empty=False)
+                mock_yf.return_value = mock_instance
+                yield NewsFetcher(max_retries=2, backoff_base=0.01)
 
     def _mock_response(self, status_code: int, articles: list = None):
         mock = MagicMock()
@@ -38,6 +43,14 @@ class TestNewsFetcher:
     def test_whitespace_ticker_raises(self, fetcher):
         with pytest.raises(InvalidTickerError):
             fetcher.fetch("   ")
+
+    def test_non_stock_ticker_raises(self, fetcher):
+        with patch("services.sentiment_analysis.fetcher.yf.Ticker") as mock_yf:
+            mock_instance = MagicMock()
+            mock_instance.history.return_value = MagicMock(empty=True)
+            mock_yf.return_value = mock_instance
+            with pytest.raises(InvalidTickerError):
+                fetcher.fetch("CHIRAG")
 
     def test_rate_limit_raises(self, fetcher):
         with patch("services.sentiment_analysis.fetcher.requests.get") as mock_get:
@@ -80,7 +93,6 @@ class TestNewsFetcher:
                 fetcher.fetch("AAPL")
 
     def test_rate_limit_not_retried(self, fetcher):
-        """Rate limit is deterministic — should raise immediately, no retry."""
         with patch("services.sentiment_analysis.fetcher.requests.get") as mock_get:
             mock_get.return_value = self._mock_response(429)
             with pytest.raises(BraveAPIRateLimitError):

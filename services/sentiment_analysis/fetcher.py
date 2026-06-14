@@ -2,7 +2,7 @@ import os
 import time
 import logging
 import requests
-from dotenv import load_dotenv
+import yfinance as yf
 
 from .exceptions import (
     BraveAPIError,
@@ -11,7 +11,6 @@ from .exceptions import (
     InvalidTickerError,
 )
 
-load_dotenv()
 logger = logging.getLogger("SentimentFetcher")
 
 
@@ -39,7 +38,19 @@ class NewsFetcher:
         ticker = ticker.strip().upper()
         if not ticker:
             raise InvalidTickerError("Ticker cannot be empty.")
-
+        
+        # Validate ticker is a real stock before calling Brave API
+        try:
+            import yfinance as yf
+            info = yf.Ticker(ticker).history(period="5d")
+            if info.empty:
+                raise InvalidTickerError(
+                    f"'{ticker}' does not appear to be a valid stock ticker."
+                )
+        except Exception:
+            raise InvalidTickerError(
+                f"'{ticker}' is not a recognised stock ticker."
+            )
         headers = {
             "Accept":              "application/json",
             "Accept-Encoding":     "gzip",

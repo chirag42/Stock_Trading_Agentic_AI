@@ -1,5 +1,6 @@
-from .service    import DataIngestionService
-from .exceptions import (
+from .service             import DataIngestionService
+from .historical_analyzer import HistoricalAnalyzer
+from .exceptions          import (
     DataIngestionError,
     InvalidTickerError,
     InsufficientDataError,
@@ -9,6 +10,7 @@ from .exceptions import (
 
 __all__ = [
     "DataIngestionService",
+    "HistoricalAnalyzer",
     "DataIngestionError",
     "InvalidTickerError",
     "InsufficientDataError",
