@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-07-05T18:41:34",
+  "passed": 6,
+  "scored": 6,
+  "probes": [
+    {
+      "id": "P1",
+      "desc": "market data missing 'macd'",
+      "expected": "InvalidMarketDataError",
+      "observed": "InvalidMarketDataError",
+      "pass": true
+    },
+    {
+      "id": "P2",
+      "desc": "RSI = 142 (out of range)",
+      "expected": "InvalidMarketDataError",
+      "observed": "InvalidMarketDataError",
+      "pass": true
+    },
+    {
+      "id": "P3",
+      "desc": "sentiment label 'euphoric'",
+      "expected": "InvalidSentimentDataError",
+      "observed": "InvalidSentimentDataError",
+      "pass": true
+    },
+    {
+      "id": "P4",
+      "desc": "empty prompt to LLM client",
+      "expected": "LLMResponseError",
+      "observed": "LLMResponseError",
+      "pass": true
+    },
+    {
+      "id": "P5",
+      "desc": "unparseable LLM response",
+      "expected": "DecisionParsingError",
+      "observed": "DecisionParsingError",
+      "pass": true
+    },
+    {
+      "id": "P6",
+      "desc": "Ollama unavailable",
+      "expected": "LLMConnectionError",
+      "observed": "LLMConnectionError",
+      "pass": true
+    }
+  ]
+}
