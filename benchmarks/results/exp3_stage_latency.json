@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-07-05T17:20:17",
+  "iters": 5,
+  "stages": {
+    "indicators": {
+      "mean_s": 0.0015,
+      "median_s": 0.0008,
+      "n": 5
+    },
+    "finbert_classify": {
+      "mean_s": 0.0869,
+      "median_s": 0.0348,
+      "n": 5
+    },
+    "llm_query": {
+      "mean_s": 2.839,
+      "median_s": 2.8955,
+      "n": 5
+    }
+  }
+}
