@@ -41,17 +41,21 @@ class StrategyAgent:
             f"from LLM response: '{llm_response[:100]}'"
         )
 
-    def decide(self, market_data: dict, sentiment_data: dict) -> dict:
+    def decide(self, market_data: dict, sentiment_data: dict,
+               fundamentals_block: str = None) -> dict:
         """
         Main entry point.
-        Takes market and sentiment data, returns a structured
-        trading decision with full reasoning.
+        Takes market and sentiment data (and optional fundamentals context),
+        returns a structured trading decision with full reasoning.
+
+        fundamentals_block is OPTIONAL and backward-compatible: existing callers
+        (e.g. benchmarks) that call decide(market, sentiment) are unaffected.
         """
         ticker = market_data.get("ticker", "UNKNOWN")
         logger.info(f"Running Strategy Agent for {ticker}...")
 
-        # Build prompt
-        prompt = self.prompt_builder.build(market_data, sentiment_data)
+        # Build prompt (fundamentals added only when provided)
+        prompt = self.prompt_builder.build(market_data, sentiment_data, fundamentals_block)
 
         # Query LLM
         llm_response = self.llm_client.query(prompt)
