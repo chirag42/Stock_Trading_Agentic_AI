@@ -68,7 +68,7 @@ class StrategyAgent:
         (e.g. benchmarks) that call decide(market, sentiment) are unaffected.
         """
         ticker = market_data.get("ticker", "UNKNOWN")
-        logger.info(f"Running Strategy Agent for {ticker} [{self.model_name}]...")
+        logger.info(f"Running Strategy Agent for {ticker} [{getattr(self, 'model_name', 'unknown')}]...")
 
         # Build prompt (fundamentals added only when provided)
         prompt = self.prompt_builder.build(market_data, sentiment_data, fundamentals_block)
@@ -76,7 +76,7 @@ class StrategyAgent:
         # Query LLM (Ollama or Claude, depending on backend)
         llm_response = self.llm_client.query(prompt)
 
-        print(f"[SOURCE] {self.backend} — {self.model_name}")
+        print(f"[SOURCE] {getattr(self, 'backend', 'unknown')} — {getattr(self, 'model_name', 'unknown')}")
 
         # Parse decision
         decision = self._parse_decision(llm_response)
