@@ -19,11 +19,12 @@ COOLDOWN_SECONDS      = 14400
 
 class Scheduler:
 
-    def __init__(self, watchlist: list = None, poll_interval: int = POLL_INTERVAL_SECONDS):
-        self.watchlist     = watchlist or WATCHLIST
+    def __init__(self, watchlist=None, poll_interval=POLL_INTERVAL_SECONDS, backend="ollama"):
+        self.watchlist = watchlist or WATCHLIST
         self.poll_interval = poll_interval
+        self.backend = backend
         self.signal_filter = SignalFilter()
-        self.pipeline      = TradingPipeline(signal_filter=self.signal_filter)
+        self.pipeline      = TradingPipeline(signal_filter=self.signal_filter, backend=self.backend)
         self.last_decision: dict = {}
 
     def _initialize(self) -> None:

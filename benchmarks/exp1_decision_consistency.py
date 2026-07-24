@@ -1,24 +1,14 @@
 """
 benchmarks/exp1_decision_consistency.py — Experiment 1 (Hard Stop 4).
 
-TECHNICAL QUESTION
-    How consistent is the local LLM (Ollama/llama3.2) decision layer? Given one fixed
-    input, does it return the same decision every time, and how long does it take?
-
-METHOD
-    Send the SAME market + sentiment input to the Strategy Agent N times. Record every
-    decision and per-call latency. Report the decision distribution, the modal-agreement
-    rate (share of runs that match the most common decision), and latency statistics.
-
-    Fixed input (oversold + bullish MACD + positive sentiment -> rules expect BUY):
-        RSI 27.8, MACD 0.85 > Signal 0.40, sentiment positive (7/1/2 of 10)
+Same fixed input sent N times; measures decision agreement and latency.
+Backend selectable: --backend ollama (default) or --backend claude.
 
 USAGE
-    ollama serve                 # ensure Ollama is running with llama3.2
-    python benchmarks/exp1_decision_consistency.py --runs 20
+    python benchmarks/exp1_decision_consistency.py --runs 20                  # Ollama
+    python benchmarks/exp1_decision_consistency.py --runs 20 --backend claude # Claude
 
-Results are printed and also written to benchmarks/results/exp1_consistency.json
-for auditability.
+Results are written to benchmarks/results/exp1_consistency_<backend>.json
 """
 
 import argparse
@@ -53,25 +43,26 @@ def percentile(values, pct):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=20, help="number of repeated LLM calls")
+    ap.add_argument("--backend", default="ollama", choices=["ollama", "claude"])
     args = ap.parse_args()
+
+    agent = StrategyAgent(backend=args.backend)
 
     print("=" * 64)
     print(" EXPERIMENT 1 — DECISION CONSISTENCY & LATENCY")
     print(f" Run at: {datetime.now().isoformat(timespec='seconds')}")
-    print(f" Model: llama3.2 (Ollama)   Runs: {args.runs}")
+    print(f" Backend: {args.backend}   Model: {agent.model_name}   Runs: {args.runs}")
     print(f" Env: Python {platform.python_version()} on {platform.system()} {platform.machine()}")
     print(" Fixed input: RSI 27.8 (oversold), MACD 0.85 > Signal 0.40 (bullish), sentiment positive")
     print("=" * 64)
 
-    agent = StrategyAgent()
     decisions, latencies = [], []
-
     for i in range(1, args.runs + 1):
         t0 = time.perf_counter()
         try:
             result = agent.decide(MARKET_DATA, SENTIMENT_DATA)
         except LLMConnectionError as exc:
-            print(f"\n[FAIL] {exc}\nStart Ollama and retry.")
+            print(f"\n[FAIL] {exc}")
             return 1
         dt = time.perf_counter() - t0
         decisions.append(result["decision"])
@@ -92,14 +83,13 @@ def main():
     print("=" * 64)
 
     os.makedirs(os.path.join(REPO_ROOT, "benchmarks", "results"), exist_ok=True)
-    out = os.path.join(REPO_ROOT, "benchmarks", "results", "exp1_consistency.json")
+    out = os.path.join(REPO_ROOT, "benchmarks", "results", f"exp1_consistency_{args.backend}.json")
     with open(out, "w") as f:
         json.dump({
             "timestamp": datetime.now().isoformat(timespec="seconds"),
-            "model": "llama3.2", "runs": args.runs,
+            "backend": args.backend, "model": agent.model_name, "runs": args.runs,
             "input": {"market": MARKET_DATA, "sentiment": SENTIMENT_DATA},
-            "decisions": decisions,
-            "distribution": dict(dist),
+            "decisions": decisions, "distribution": dict(dist),
             "modal_decision": modal, "agreement_pct": round(agreement, 1),
             "latency_s": {
                 "mean": round(statistics.mean(latencies), 3),

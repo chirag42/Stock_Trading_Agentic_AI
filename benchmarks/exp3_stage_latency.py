@@ -1,23 +1,14 @@
 """
 benchmarks/exp3_stage_latency.py — Experiment 3 (Hard Stop 4).
 
-TECHNICAL QUESTION
-    Where is the time spent in the decision pipeline? Which stage is the bottleneck?
-
-METHOD
-    Time the computational stages on FIXED inputs (no network, so timings are stable and
-    reproducible): indicator computation, FinBERT sentiment classification, and the LLM
-    query. Each stage is timed over K iterations; report mean and median per stage. This
-    isolates the compute cost of each stage and identifies the dominant one.
-
-    Data ingestion (yfinance) latency is intentionally excluded here because it is network-
-    bound and variable; it is discussed qualitatively in the write-up instead.
+Per-stage latency: indicators, FinBERT, and the LLM query, on fixed inputs.
+LLM backend selectable: --backend ollama (default) or --backend claude.
 
 USAGE
-    ollama serve
     python benchmarks/exp3_stage_latency.py --iters 5
+    python benchmarks/exp3_stage_latency.py --iters 5 --backend claude
 
-Results are written to benchmarks/results/exp3_stage_latency.json
+Results are written to benchmarks/results/exp3_stage_latency_<backend>.json
 """
 
 import argparse
@@ -49,16 +40,18 @@ def time_stage(fn, iters):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--iters", type=int, default=5, help="iterations per stage")
+    ap.add_argument("--backend", default="ollama", choices=["ollama", "claude"])
     args = ap.parse_args()
 
     print("=" * 64)
     print(" EXPERIMENT 3 — PER-STAGE LATENCY PROFILE")
     print(f" Run at: {datetime.now().isoformat(timespec='seconds')}")
-    print(f" Iterations/stage: {args.iters}")
+    print(f" LLM backend: {args.backend}   Iterations/stage: {args.iters}")
     print(f" Env: Python {platform.python_version()} on {platform.system()} {platform.machine()}")
     print("=" * 64)
 
     results = {}
+    model_name = args.backend
 
     # Stage 1: indicator computation (offline)
     from services.data_ingestion.indicators import IndicatorCalculator
@@ -75,15 +68,16 @@ def main():
     except Exception as exc:  # noqa: BLE001
         print(f"  [WARN] FinBERT stage skipped: {type(exc).__name__}: {exc}")
 
-    # Stage 3: LLM query (Ollama)
+    # Stage 3: LLM query (Ollama or Claude)
     try:
         from agents.strategy_agent import StrategyAgent, LLMConnectionError
-        agent = StrategyAgent()
+        agent = StrategyAgent(backend=args.backend)
+        model_name = agent.model_name
         market = {"ticker": "BENCH", "close_price": 182.4, "rsi": 27.8, "macd": 0.85, "signal": 0.40}
         sentiment = {"overall": "positive", "positive": 7, "negative": 1, "neutral": 2, "articles_analyzed": 10}
         results["llm_query"] = time_stage(lambda: agent.decide(market, sentiment), args.iters)
     except LLMConnectionError as exc:
-        print(f"  [WARN] LLM stage skipped (Ollama not running): {exc}")
+        print(f"  [WARN] LLM stage skipped: {exc}")
 
     print(f"\n {'Stage':<20}{'mean (s)':>12}{'median (s)':>14}")
     print(" " + "-" * 44)
@@ -99,9 +93,10 @@ def main():
         print(f" LLM query is ~{ratio:,.0f}x slower than indicator computation.")
 
     os.makedirs(os.path.join(REPO_ROOT, "benchmarks", "results"), exist_ok=True)
-    out = os.path.join(REPO_ROOT, "benchmarks", "results", "exp3_stage_latency.json")
+    out = os.path.join(REPO_ROOT, "benchmarks", "results", f"exp3_stage_latency_{args.backend}.json")
     with open(out, "w") as f:
         json.dump({"timestamp": datetime.now().isoformat(timespec="seconds"),
+                   "backend": args.backend, "llm_model": model_name,
                    "iters": args.iters, "stages": summary}, f, indent=2)
     print(f" Wrote {out}")
     return 0

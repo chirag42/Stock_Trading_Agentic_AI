@@ -1,22 +1,14 @@
 """
 benchmarks/exp2_llm_vs_rules.py — Experiment 2 (Hard Stop 4).
 
-TECHNICAL QUESTION
-    Does the LLM actually follow the decision rules it is given? We compare the LLM's
-    decision against a deterministic rule oracle (benchmarks/rule_oracle.py) that encodes
-    the exact rules from the prompt, across a controlled scenario matrix.
-
-METHOD
-    Build a matrix of scenarios varying RSI regime x MACD direction x sentiment. For each
-    scenario, compute the oracle's rule-based decision and query the LLM once (configurable).
-    Report per-scenario agreement and the overall agreement rate. Because the oracle is
-    deterministic, any disagreement isolates LLM deviation from its stated rules.
+LLM decision vs deterministic rule oracle across an 18-scenario matrix.
+Backend selectable: --backend ollama (default) or --backend claude.
 
 USAGE
-    ollama serve
     python benchmarks/exp2_llm_vs_rules.py --repeats 1
+    python benchmarks/exp2_llm_vs_rules.py --repeats 1 --backend claude
 
-Results are written to benchmarks/results/exp2_llm_vs_rules.json
+Results are written to benchmarks/results/exp2_llm_vs_rules_<backend>.json
 """
 
 import argparse
@@ -33,7 +25,6 @@ if REPO_ROOT not in sys.path:
 from agents.strategy_agent import StrategyAgent, LLMConnectionError
 from benchmarks.rule_oracle import rule_decision
 
-# RSI regimes, MACD directions, sentiment labels -> full factorial matrix
 RSI_LEVELS = {"oversold": 27.0, "neutral": 50.0, "overbought": 73.0}
 MACD_DIRS = {"bullish": (0.9, 0.4), "bearish": (0.4, 0.9)}   # (macd, signal)
 SENTIMENTS = {
@@ -46,20 +37,21 @@ SENTIMENTS = {
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--repeats", type=int, default=1, help="LLM queries per scenario")
+    ap.add_argument("--backend", default="ollama", choices=["ollama", "claude"])
     args = ap.parse_args()
+
+    agent = StrategyAgent(backend=args.backend)
 
     print("=" * 72)
     print(" EXPERIMENT 2 — LLM vs DETERMINISTIC RULE ORACLE")
     print(f" Run at: {datetime.now().isoformat(timespec='seconds')}")
-    print(f" Model: llama3.2 (Ollama)   Repeats/scenario: {args.repeats}")
+    print(f" Backend: {args.backend}   Model: {agent.model_name}   Repeats/scenario: {args.repeats}")
     print(f" Env: Python {platform.python_version()} on {platform.system()} {platform.machine()}")
     print("=" * 72)
     print(f" {'RSI':<11}{'MACD':<9}{'Sentiment':<11}{'Oracle':<8}{'LLM':<8}{'Match'}")
     print(" " + "-" * 62)
 
-    agent = StrategyAgent()
     rows, matches, total = [], 0, 0
-
     for rsi_name, rsi in RSI_LEVELS.items():
         for macd_name, (macd, signal) in MACD_DIRS.items():
             for sent_name, sentiment in SENTIMENTS.items():
@@ -69,7 +61,7 @@ def main():
                     try:
                         llm = agent.decide(market, sentiment)["decision"]
                     except LLMConnectionError as exc:
-                        print(f"\n[FAIL] {exc}\nStart Ollama and retry.")
+                        print(f"\n[FAIL] {exc}")
                         return 1
                     match = (llm == oracle)
                     matches += int(match); total += 1
@@ -83,9 +75,10 @@ def main():
     print("=" * 72)
 
     os.makedirs(os.path.join(REPO_ROOT, "benchmarks", "results"), exist_ok=True)
-    out = os.path.join(REPO_ROOT, "benchmarks", "results", "exp2_llm_vs_rules.json")
+    out = os.path.join(REPO_ROOT, "benchmarks", "results", f"exp2_llm_vs_rules_{args.backend}.json")
     with open(out, "w") as f:
-        json.dump({"timestamp": datetime.now().isoformat(timespec="seconds"), "model": "llama3.2",
+        json.dump({"timestamp": datetime.now().isoformat(timespec="seconds"),
+                   "backend": args.backend, "model": agent.model_name,
                    "repeats_per_scenario": args.repeats, "agreement_pct": round(rate, 1),
                    "matches": matches, "total": total, "rows": rows}, f, indent=2)
     print(f" Wrote {out}")

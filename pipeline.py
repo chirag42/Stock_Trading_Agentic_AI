@@ -16,11 +16,11 @@ logger = logging.getLogger("Pipeline")
 
 class TradingPipeline:
 
-    def __init__(self, signal_filter: SignalFilter = None):
+    def __init__(self, signal_filter: SignalFilter = None, backend: str = "ollama"):
         self.data_svc      = DataIngestionService(cache_ttl=240)
         self.sentiment_svc = SentimentAnalysisService()
         self.fundamentals_fetcher = FundamentalsFetcher()
-        self.agent         = StrategyAgent()
+        self.agent         = StrategyAgent(backend=backend) 
         # Use shared signal filter from scheduler if provided
         # otherwise create a fresh one
         self.signal_filter = signal_filter or SignalFilter()
