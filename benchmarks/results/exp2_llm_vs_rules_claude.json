@@ -1,0 +1,155 @@
+{
+  "timestamp": "2026-07-12T20:25:53",
+  "backend": "claude",
+  "model": "claude-sonnet-4-6",
+  "repeats_per_scenario": 1,
+  "agreement_pct": 100.0,
+  "matches": 18,
+  "total": 18,
+  "rows": [
+    {
+      "rsi": "oversold",
+      "macd": "bullish",
+      "sentiment": "positive",
+      "oracle": "BUY",
+      "llm": "BUY",
+      "match": true
+    },
+    {
+      "rsi": "oversold",
+      "macd": "bullish",
+      "sentiment": "negative",
+      "oracle": "BUY",
+      "llm": "BUY",
+      "match": true
+    },
+    {
+      "rsi": "oversold",
+      "macd": "bullish",
+      "sentiment": "neutral",
+      "oracle": "BUY",
+      "llm": "BUY",
+      "match": true
+    },
+    {
+      "rsi": "oversold",
+      "macd": "bearish",
+      "sentiment": "positive",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "oversold",
+      "macd": "bearish",
+      "sentiment": "negative",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "oversold",
+      "macd": "bearish",
+      "sentiment": "neutral",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "neutral",
+      "macd": "bullish",
+      "sentiment": "positive",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "neutral",
+      "macd": "bullish",
+      "sentiment": "negative",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "neutral",
+      "macd": "bullish",
+      "sentiment": "neutral",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "neutral",
+      "macd": "bearish",
+      "sentiment": "positive",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "neutral",
+      "macd": "bearish",
+      "sentiment": "negative",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "neutral",
+      "macd": "bearish",
+      "sentiment": "neutral",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "overbought",
+      "macd": "bullish",
+      "sentiment": "positive",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "overbought",
+      "macd": "bullish",
+      "sentiment": "negative",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "overbought",
+      "macd": "bullish",
+      "sentiment": "neutral",
+      "oracle": "HOLD",
+      "llm": "HOLD",
+      "match": true
+    },
+    {
+      "rsi": "overbought",
+      "macd": "bearish",
+      "sentiment": "positive",
+      "oracle": "SELL",
+      "llm": "SELL",
+      "match": true
+    },
+    {
+      "rsi": "overbought",
+      "macd": "bearish",
+      "sentiment": "negative",
+      "oracle": "SELL",
+      "llm": "SELL",
+      "match": true
+    },
+    {
+      "rsi": "overbought",
+      "macd": "bearish",
+      "sentiment": "neutral",
+      "oracle": "SELL",
+      "llm": "SELL",
+      "match": true
+    }
+  ]
+}

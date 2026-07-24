@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-07-12T20:13:55",
+  "backend": "ollama",
+  "model": "llama3.2",
+  "runs": 20,
+  "input": {
+    "market": {
+      "ticker": "BENCH",
+      "close_price": 182.4,
+      "rsi": 27.8,
+      "macd": 0.85,
+      "signal": 0.4
+    },
+    "sentiment": {
+      "overall": "positive",
+      "positive": 7,
+      "negative": 1,
+      "neutral": 2,
+      "articles_analyzed": 10
+    }
+  },
+  "decisions": [
+    "HOLD",
+    "BUY",
+    "HOLD",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "HOLD",
+    "HOLD",
+    "HOLD",
+    "BUY",
+    "BUY",
+    "BUY",
+    "HOLD",
+    "HOLD",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "HOLD"
+  ],
+  "distribution": {
+    "HOLD": 8,
+    "BUY": 12
+  },
+  "modal_decision": "BUY",
+  "agreement_pct": 60.0,
+  "latency_s": {
+    "mean": 2.659,
+    "median": 2.431,
+    "p95": 3.749,
+    "min": 1.667,
+    "max": 6.516
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-07-12T20:27:08",
+  "backend": "claude",
+  "llm_model": "claude-sonnet-4-6",
+  "iters": 5,
+  "stages": {
+    "indicators": {
+      "mean_s": 0.0009,
+      "median_s": 0.0008,
+      "n": 5
+    },
+    "finbert_classify": {
+      "mean_s": 0.0618,
+      "median_s": 0.024,
+      "n": 5
+    },
+    "llm_query": {
+      "mean_s": 4.9959,
+      "median_s": 4.9158,
+      "n": 5
+    }
+  }
+}

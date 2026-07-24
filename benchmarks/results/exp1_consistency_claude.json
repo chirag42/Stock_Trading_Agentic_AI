@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-07-12T20:15:47",
+  "backend": "claude",
+  "model": "claude-sonnet-4-6",
+  "runs": 20,
+  "input": {
+    "market": {
+      "ticker": "BENCH",
+      "close_price": 182.4,
+      "rsi": 27.8,
+      "macd": 0.85,
+      "signal": 0.4
+    },
+    "sentiment": {
+      "overall": "positive",
+      "positive": 7,
+      "negative": 1,
+      "neutral": 2,
+      "articles_analyzed": 10
+    }
+  },
+  "decisions": [
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY",
+    "BUY"
+  ],
+  "distribution": {
+    "BUY": 20
+  },
+  "modal_decision": "BUY",
+  "agreement_pct": 100.0,
+  "latency_s": {
+    "mean": 4.776,
+    "median": 4.558,
+    "p95": 6.094,
+    "min": 3.875,
+    "max": 7.099
+  }
+}

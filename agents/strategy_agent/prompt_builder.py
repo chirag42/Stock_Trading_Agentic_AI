@@ -32,10 +32,16 @@ class PromptBuilder:
                 f"Must be one of {valid_labels}."
             )
 
-    def build(self, market_data: dict, sentiment_data: dict) -> str:
+    def build(self, market_data: dict, sentiment_data: dict,
+              fundamentals_block: str = None) -> str:
         """
-        Validates inputs and builds a structured prompt
-        for the LLM strategy decision.
+        Validates inputs and builds a structured prompt for the LLM strategy decision.
+
+        fundamentals_block is OPTIONAL. When omitted (e.g. in benchmarks), the prompt is
+        identical to the technicals+sentiment version, so benchmark results stay
+        comparable. When provided (live pipeline), a FUNDAMENTALS section and two extra
+        handling rules are added — fundamentals inform reasoning and risk, not the
+        decision rules themselves.
         """
         self.validate_market_data(market_data)
         self.validate_sentiment_data(sentiment_data)
@@ -76,12 +82,32 @@ class PromptBuilder:
             f"Positive Articles: {positive}/{total}",
             f"Negative Articles: {negative}/{total}",
             f"Neutral Articles:  {neutral}/{total}",
+        ]
+
+        # Optional fundamentals section — only added when provided.
+        if fundamentals_block:
+            lines += ["", fundamentals_block]
+
+        lines += [
             "",
             "DECISION RULES — FOLLOW STRICTLY",
             "- Recommend BUY  only when: RSI is oversold (< 35) AND MACD is bullish crossover",
             "- Recommend SELL only when: RSI is overbought (> 65) AND MACD is bearish crossover",
             "- Recommend HOLD when: signals are mixed, unclear, or do not meet above criteria",
             "- When in doubt, always default to HOLD — never force a BUY or SELL",
+        ]
+
+        # Extra handling rules only when fundamentals are present, so the base prompt
+        # (and therefore benchmark behavior) is unchanged when they are not.
+        if fundamentals_block:
+            lines += [
+                "- Use FUNDAMENTALS and earnings timing to inform your REASONING and the "
+                "RISK you flag — not to override the decision rules above.",
+                "- If a fundamentals field is 'unavailable', do NOT assume a value; reason "
+                "only from the data that is present.",
+            ]
+
+        lines += [
             "",
             "YOUR TASK",
             "1. First line must be exactly one word: BUY, SELL, or HOLD",
