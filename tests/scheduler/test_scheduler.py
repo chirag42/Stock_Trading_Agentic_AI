@@ -25,14 +25,9 @@ def mock_signal_filter():
 
 @pytest.fixture
 def scheduler(mock_pipeline, mock_signal_filter):
-    """
-    Scheduler with mocked pipeline and signal filter
-    so no real API calls or LLM queries happen.
-    """
-    s = Scheduler(
-        watchlist=["AAPL", "MSFT", "TSLA"],
-        poll_interval=300
-    )
+    """Scheduler with pipeline patched at construction — no real pipeline/FinBERT."""
+    with patch("core.scheduler.TradingPipeline", return_value=mock_pipeline):
+        s = Scheduler(watchlist=["AAPL", "MSFT", "TSLA"], poll_interval=300)
     s.pipeline      = mock_pipeline
     s.signal_filter = mock_signal_filter
     return s
