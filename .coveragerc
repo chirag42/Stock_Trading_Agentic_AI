@@ -1,0 +1,22 @@
+# Coverage config — measure real logic, not entry points or demo blocks.
+[run]
+branch = True
+omit =
+    */tests/*
+    */__init__.py
+    main.py
+    test_loop.py
+    pipeline_demo.py
+    scripts/*
+    benchmarks/*
+    api_server.py
+
+[report]
+show_missing = True
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    def __repr__
+    while True:
