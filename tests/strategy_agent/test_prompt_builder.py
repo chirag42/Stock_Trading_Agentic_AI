@@ -75,3 +75,18 @@ class TestPromptBuilder:
         data["rsi"] = "high"
         with pytest.raises(InvalidMarketDataError, match="must be a number"):
             prompt_builder.build(data, sentiment_data)
+
+class TestFundamentalsBranch:
+    """Covers the optional fundamentals section (lines only hit when a block is passed)."""
+
+    def test_build_includes_fundamentals_block(self, prompt_builder, market_data, sentiment_data):
+        block = "FUNDAMENTALS\nSector: Tech\nRevenue trend: rising"
+        result = prompt_builder.build(market_data, sentiment_data, fundamentals_block=block)
+        assert "FUNDAMENTALS" in result
+        assert "Sector: Tech" in result
+        # extra handling rule only appears when fundamentals are present
+        assert "inform your REASONING" in result
+
+    def test_build_without_fundamentals_omits_block(self, prompt_builder, market_data, sentiment_data):
+        result = prompt_builder.build(market_data, sentiment_data)
+        assert "FUNDAMENTALS" not in result
