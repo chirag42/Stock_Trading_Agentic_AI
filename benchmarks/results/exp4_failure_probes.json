@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-07-05T18:41:34",
-  "passed": 6,
-  "scored": 6,
+  "timestamp": "2026-07-28T20:40:03",
+  "passed": 5,
+  "scored": 5,
   "probes": [
     {
       "id": "P1",
@@ -42,8 +42,8 @@
       "id": "P6",
       "desc": "Ollama unavailable",
       "expected": "LLMConnectionError",
-      "observed": "LLMConnectionError",
-      "pass": true
+      "observed": "Ollama is running",
+      "pass": null
     }
   ]
 }

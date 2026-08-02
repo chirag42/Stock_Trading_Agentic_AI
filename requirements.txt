@@ -1,6 +1,6 @@
 # ── Agentic AI Stock Trading System — pinned dependencies ──
 # Core pipeline (GRAD 695)
-yfinance==0.2.40
+yfinance==1.5.2
 pandas==2.2.2
 numpy==1.26.4
 pytz==2024.1
