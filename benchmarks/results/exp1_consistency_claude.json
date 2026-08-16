@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-12T20:15:47",
+  "timestamp": "2026-08-09T23:36:11",
   "backend": "claude",
   "model": "claude-sonnet-4-6",
   "runs": 20,
@@ -47,10 +47,10 @@
   "modal_decision": "BUY",
   "agreement_pct": 100.0,
   "latency_s": {
-    "mean": 4.776,
-    "median": 4.558,
-    "p95": 6.094,
-    "min": 3.875,
-    "max": 7.099
+    "mean": 5.207,
+    "median": 4.808,
+    "p95": 7.2,
+    "min": 3.871,
+    "max": 8.268
   }
 }
